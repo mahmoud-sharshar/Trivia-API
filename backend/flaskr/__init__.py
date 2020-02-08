@@ -15,7 +15,7 @@ def create_app(test_config=None):
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
-  cors = CORS(app, resources={r"/*": {"origins": "*"}})
+  cors = CORS(app, resources={r"*": {"origins": "*"}})
   '''
   @TODO: Use the after_request decorator to set Access-Control-Allow
   '''
@@ -211,20 +211,24 @@ def create_app(test_config=None):
 
     try:
       category_questions = Question.query.filter(Question.category == category_id).all()
-      random_questions = []
-      for question in category_questions:
-        if question.id not in questions_id:
-          random_questions.append(question.format())
-      
-      # if len(random_questions) == 0:
-      #   abort(404)
-      
-      selected_question = random_questions[random.randint(0,len(random_questions))]
-      
-      return jsonify({
-          'success':True,
-          'question':selected_question
+      if len(category_questions) == len(questions_id):
+        return jsonify({
+            'success':True,
+            'question':None,
+            'empty': True
         })
+      else:
+        random_questions = []
+        for question in category_questions:
+          if question.id not in questions_id:
+            random_questions.append(question.format())
+        
+        selected_question = random_questions[random.randint(0,len(random_questions))]
+        return jsonify({
+              'success':True,
+              'question':selected_question,
+              'empty': False
+          })
     except:
       abort(500)
 
@@ -237,7 +241,7 @@ def create_app(test_config=None):
   def not_found_404(error):
     return jsonify({
         'success':False,
-        'message':"Not Found",
+        'message':"Resource Not Found",
         'error':404
       }),404
 

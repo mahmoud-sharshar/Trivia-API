@@ -57,9 +57,10 @@ class TriviaTestCase(unittest.TestCase):
         data = res.get_json()
         self.assertEqual(res.status_code,404)
         self.assertFalse(data['success'])
-        self.assertEqual(data['message'],'Not Found')
+        self.assertEqual(data['message'],'Resource Not Found')
     
     def test_delete_question_success(self):
+        ''' test for successful deletion of a question'''
         deleted_item = Question.query.get(20).format()
         cloned_item = Question(deleted_item['question'],deleted_item['answer'],
                             deleted_item['category'],deleted_item['difficulty'])
@@ -75,14 +76,16 @@ class TriviaTestCase(unittest.TestCase):
         cloned_item.insert()
 
     def test_delete_non_existant_question(self):
+        ''' test for failure deletion on non_existant question'''
         res = self.client().delete('/questions/2000000')
         data = res.get_json()
         self.assertEqual(res.status_code,404)
         self.assertFalse(data['success'])
-        self.assertEqual(data['message'],'Not Found')
+        self.assertEqual(data['message'],'Resource Not Found')
 
 
     def test_add_new_question_with_correct_parameters(self):
+        ''' test successfull addition of new question'''
         res = self.client().post('/questions',json = {
             "question":"how old is Egyptian civilization?",
             "answer": "seven thousand year",
@@ -94,6 +97,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code,200)
 
     def test_bad_request_add_new_question(self):
+        ''' test of failure addition'''
         res = self.client().post('/questions',json = {
             "Auestion":"how old is Egyptian civilization?",
             "Answer": "seven thousand year",
@@ -106,6 +110,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'],'Bad request')
 
     def test_search_for_keyword(self):
+        ''' test of successful search for specific question'''
         res = self.client().post('/questions/search',json = {
             "search_term":"title"
             })
@@ -115,20 +120,43 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
 
     def test_retrieve_questions_in_specific_category(self):
-        res = self.client().get('categories/1/questions?page=1')
+        ''' test of retreival of questions on specific category'''
+        res = self.client().get('/categories/1/questions?page=1')
         data = res.get_json()
         self.assertEqual(res.status_code,200)
         self.assertTrue(len(data['questions']))
         self.assertTrue(data['success'])
     
     def test_retrieve_questions_in_non_existant_category(self):
-        res = self.client().get('categories/111/questions?page=1')
+        ''' test for retreival questions in non existant category'''
+        res = self.client().get('/categories/111/questions?page=1')
         data = res.get_json()
         self.assertEqual(res.status_code,404)
-        self.assertEqual(data['message'],"Not Found")
+        self.assertEqual(data['message'],"Resource Not Found")
         self.assertFalse(data['success'])
 
+    def test_get_random_question_for_quiz(self):
+        ''' test for successful get random question form specific category'''
+        res = self.client().post("/quizzes",json = {
+            "quiz_category": 2,
+            "previous_questions": [17]
+        })
+        data  = res.get_json()
+        self.assertTrue(data['success'])
+        self.assertFalse(data['empty'])
+        self.assertTrue(data['question']['id'] != 17)
 
+    def test_get_random_question_after_consume_all_questions_for_quiz(self):
+        ''' test to get random question from consumed category'''
+        res = self.client().post("/quizzes",json = {
+            "quiz_category": 2,
+            "previous_questions": [16,17,18,19]
+        })
+        data  = res.get_json()
+        print(data)
+        self.assertTrue(data['success'])
+        self.assertTrue(data['empty'])
+        self.assertTrue(data['question'] is None)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
