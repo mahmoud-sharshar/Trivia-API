@@ -15,7 +15,7 @@ def create_app(test_config=None):
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
-  cors = CORS(app, resources={r"*": {"origins": "*"}})
+  cors = CORS(app, resources={r"/*": {"origins": "*"}})
   '''
   @TODO: Use the after_request decorator to set Access-Control-Allow
   '''
@@ -23,6 +23,8 @@ def create_app(test_config=None):
   def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE,OPTIONS')
+    # response.headers.add('Access-Control-Allow-Credentials','true')
+    # response.headers.add('Access-Control-Allow-Origin',"*")
     return response
   '''
   @TODO: 
@@ -192,12 +194,14 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
-  @app.route('/quiz',methods=['POST'])
+  
+  @app.route('/quizzes',methods=['POST'])
+  # @cross_origin()
   def get_quiz_questions():
     data = request.get_json()
     try:
-      category_id = data['category']
-      questions_id = data['questions']
+      category_id = data['quiz_category']
+      questions_id = data['previous_questions']
     except:
       abort(400)
 
@@ -219,7 +223,7 @@ def create_app(test_config=None):
       
       return jsonify({
           'success':True,
-          'selected_question':selected_question
+          'question':selected_question
         })
     except:
       abort(500)
